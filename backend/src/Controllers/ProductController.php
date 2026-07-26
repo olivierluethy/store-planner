@@ -201,15 +201,30 @@ final class ProductController
             Http::error('validation_error', 'Expected a non-empty array of { id, sort_order }.', 422);
         }
 
-        $pdo = Database::connection();
-        $pdo->beginTransaction();
-        $stmt = $pdo->prepare('UPDATE products SET sort_order = :sort, updated_at = NOW() WHERE id = :id');
+        // Validate shape and collect ids up front.
+        $rows = [];
         foreach ($items as $item) {
             if (!is_array($item) || !isset($item['id'], $item['sort_order'])) {
-                $pdo->rollBack();
                 Http::error('validation_error', 'Each item needs an id and a sort_order.', 422);
             }
-            $stmt->execute([':sort' => (int) $item['sort_order'], ':id' => (int) $item['id']]);
+            $rows[] = ['id' => (int) $item['id'], 'sort' => (int) $item['sort_order']];
+        }
+
+        $pdo = Database::connection();
+
+        // Every id must reference an existing product.
+        $ids = array_column($rows, 'id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $check = $pdo->prepare("SELECT COUNT(*) FROM products WHERE id IN ($placeholders)");
+        $check->execute($ids);
+        if ((int) $check->fetchColumn() !== count(array_unique($ids))) {
+            Http::error('validation_error', 'One or more products do not exist.', 422);
+        }
+
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('UPDATE products SET sort_order = :sort, updated_at = NOW() WHERE id = :id');
+        foreach ($rows as $row) {
+            $stmt->execute([':sort' => $row['sort'], ':id' => $row['id']]);
         }
         $pdo->commit();
 
