@@ -1,18 +1,10 @@
 import { useMemo, useState } from 'react'
-import { IonIcon, IonReorder, IonReorderGroup } from '@ionic/react'
-import type { ItemReorderEventDetail } from '@ionic/react'
-import {
-  addOutline,
-  createOutline,
-  reorderThreeOutline,
-  searchOutline,
-  swapVerticalOutline,
-  trashOutline,
-} from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
+import { addOutline, searchOutline, swapVerticalOutline } from 'ionicons/icons'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../context/StoreContext'
 import { useToast } from '../context/ToastContext'
-import { ProductImage } from '../components/ui/ProductImage'
+import { ReorderableProductList } from '../components/products/ReorderableProductList'
 import type { Product } from '../types'
 
 type SortKey = 'manual' | 'name' | 'created' | 'updated' | 'zone'
@@ -78,9 +70,12 @@ export function ProductsView({ onOpenDetail, onCreate, onEdit, onDelete }: Produ
   }, [products, search, sort, asc, zoneName])
 
   const reorderable = isAuthenticated && sort === 'manual' && search.trim() === ''
+  const showSortHint = isAuthenticated && sort !== 'manual'
 
-  async function handleReorder(e: CustomEvent<ItemReorderEventDetail>) {
-    const reordered = e.detail.complete(visible.slice()) as Product[]
+  async function handleReorder(from: number, to: number) {
+    const reordered = visible.slice()
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
     try {
       await reorder(reordered)
     } catch {
@@ -127,34 +122,35 @@ export function ProductsView({ onOpenDetail, onCreate, onEdit, onDelete }: Produ
         </div>
       </div>
 
+      {/* Manual-order hint */}
+      {showSortHint && (
+        <p className="mb-2 shrink-0 text-[13px] text-ink-mute">
+          Sortierung auf «Reihenfolge» stellen, um Produkte manuell zu ordnen.
+        </p>
+      )}
+
       {/* List */}
-      <div className="min-h-0 flex-1 overflow-y-auto pb-24">
-        {visible.length === 0 ? (
-          <div className="grid place-items-center gap-2 py-16 text-center">
-            <p className="text-ink-soft">Keine Produkte gefunden.</p>
-            {isAuthenticated && (
-              <button className="text-sm font-semibold text-accent" onClick={onCreate}>
-                Erstes Produkt anlegen
-              </button>
-            )}
-          </div>
-        ) : (
-          <IonReorderGroup disabled={!reorderable} onIonItemReorder={handleReorder}>
-            {visible.map((product) => (
-              <ProductRow
-                key={product.id}
-                product={product}
-                location={product.zone_id ? (zoneName.get(product.zone_id) ?? null) : null}
-                canEdit={isAuthenticated}
-                reorderable={reorderable}
-                onOpen={() => onOpenDetail(product)}
-                onEdit={() => onEdit(product)}
-                onDelete={() => onDelete(product)}
-              />
-            ))}
-          </IonReorderGroup>
-        )}
-      </div>
+      {visible.length === 0 ? (
+        <div className="grid min-h-0 flex-1 place-items-center gap-2 py-16 text-center">
+          <p className="text-ink-soft">Keine Produkte gefunden.</p>
+          {isAuthenticated && (
+            <button className="text-sm font-semibold text-accent" onClick={onCreate}>
+              Erstes Produkt anlegen
+            </button>
+          )}
+        </div>
+      ) : (
+        <ReorderableProductList
+          items={visible}
+          zoneName={zoneName}
+          canEdit={isAuthenticated}
+          reorderable={reorderable}
+          onOpen={onOpenDetail}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onReorder={handleReorder}
+        />
+      )}
 
       {/* Create FAB */}
       {isAuthenticated && (
@@ -167,82 +163,6 @@ export function ProductsView({ onOpenDetail, onCreate, onEdit, onDelete }: Produ
         >
           <IonIcon icon={addOutline} className="text-2xl" />
         </button>
-      )}
-    </div>
-  )
-}
-
-interface ProductRowProps {
-  product: Product
-  location: string | null
-  canEdit: boolean
-  reorderable: boolean
-  onOpen: () => void
-  onEdit: () => void
-  onDelete: () => void
-}
-
-function ProductRow({
-  product,
-  location,
-  canEdit,
-  reorderable,
-  onOpen,
-  onEdit,
-  onDelete,
-}: ProductRowProps) {
-  return (
-    <div className="mb-2 flex items-center gap-3 rounded-md bg-surface p-3 ring-1 ring-line transition-colors hover:bg-raised">
-      {reorderable && (
-        <IonReorder>
-          <span className="grid h-8 w-6 cursor-grab place-items-center text-ink-mute">
-            <IonIcon icon={reorderThreeOutline} className="text-lg" />
-          </span>
-        </IonReorder>
-      )}
-
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-      >
-        <ProductImage name={product.name} imageUrl={product.image_url} className="h-12 w-12 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold text-ink">{product.name}</p>
-          {product.description && (
-            <p className="truncate text-[13px] text-ink-mute">{product.description}</p>
-          )}
-        </div>
-        <span
-          className="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-medium"
-          style={{
-            background: location ? 'var(--accent-soft)' : 'var(--surface-inset)',
-            color: location ? 'var(--accent)' : 'var(--text-muted)',
-          }}
-        >
-          {location ?? 'Nicht platziert'}
-        </span>
-      </button>
-
-      {canEdit && (
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label="Bearbeiten"
-            className="grid h-9 w-9 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-inset hover:text-ink"
-          >
-            <IonIcon icon={createOutline} className="text-lg" />
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label="Löschen"
-            className="grid h-9 w-9 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-[color:var(--danger-soft)] hover:text-danger"
-          >
-            <IonIcon icon={trashOutline} className="text-lg" />
-          </button>
-        </div>
       )}
     </div>
   )
