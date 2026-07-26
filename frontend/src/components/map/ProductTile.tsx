@@ -58,7 +58,17 @@ export function PlacedTile({ product, center, draggable, hidden, onPointerDown }
 }
 
 /** The floating clone that follows the pointer during a drag. */
-export function DragGhost({ product, x, y }: { product: Product; x: number; y: number }) {
+export function DragGhost({
+  product,
+  x,
+  y,
+  invalid = false,
+}: {
+  product: Product
+  x: number
+  y: number
+  invalid?: boolean
+}) {
   return (
     <div
       className="pointer-events-none fixed z-[60]"
@@ -71,10 +81,36 @@ export function DragGhost({ product, x, y }: { product: Product; x: number; y: n
         filter: 'drop-shadow(0 16px 20px rgba(0,0,0,0.5))',
       }}
     >
-      <div style={{ boxShadow: 'var(--drag-shadow)', borderRadius: 'var(--radius-md)' }}>
-        <TileVisual product={product} grabbed />
+      <div
+        style={{
+          boxShadow: invalid
+            ? '0 0 0 2px var(--drop-invalid-ring)'
+            : 'var(--drag-shadow)',
+          borderRadius: 'var(--radius-md)',
+        }}
+      >
+        <TileVisual product={product} grabbed={!invalid} />
       </div>
     </div>
+  )
+}
+
+/** Dashed outline showing exactly where a tile will land inside a valid zone. */
+export function LandingGhost({ x, y }: { x: number; y: number }) {
+  return (
+    <div
+      className="pointer-events-none absolute z-[15]"
+      style={{
+        left: x,
+        top: y,
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        transform: 'translate(-50%, -50%)',
+        border: '1.5px dashed var(--accent)',
+        borderRadius: 'var(--radius-md)',
+        background: 'var(--accent-soft)',
+      }}
+    />
   )
 }
 

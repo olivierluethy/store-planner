@@ -9,7 +9,7 @@ import type { Transform } from './geometry'
 import { useDragController } from './useDragController'
 import type { DropResult } from './useDragController'
 import { ZoneShape } from './ZoneShape'
-import { DragGhost, PlacedTile } from './ProductTile'
+import { DragGhost, LandingGhost, PlacedTile } from './ProductTile'
 import { Tray } from './Tray'
 
 interface StoreMapProps {
@@ -112,7 +112,19 @@ export function StoreMap({ enabled, onOpenDetail }: StoreMapProps) {
               )
             })}
 
-            {state.product && <DragGhost product={state.product} x={state.ghostX} y={state.ghostY} />}
+            {/* Dashed outline at the exact landing spot inside a valid zone */}
+            {state.product && state.landingX !== null && state.landingY !== null && (
+              <LandingGhost x={state.landingX} y={state.landingY} />
+            )}
+
+            {state.product && (
+              <DragGhost
+                product={state.product}
+                x={state.ghostX}
+                y={state.ghostY}
+                invalid={state.overInvalid}
+              />
+            )}
           </>
         )}
       </div>

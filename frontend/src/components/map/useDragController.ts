@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import type { Product, Zone } from '../../types'
 import type { Transform } from './geometry'
-import { pointInRect, pointToZonePos, zoneRect } from './geometry'
+import { placedCenter, pointInRect, pointToZonePos, zoneRect } from './geometry'
 
 export type DropResult =
   | { kind: 'zone'; zone_id: number; pos_x: number; pos_y: number }
@@ -15,9 +15,23 @@ interface DragState {
   ghostY: number
   hoveredZoneId: number | null
   overTray: boolean
+  /** Container-local point where the tile would land (valid zone only). */
+  landingX: number | null
+  landingY: number | null
+  /** Dragging but over no valid target (will snap back). */
+  overInvalid: boolean
 }
 
-const IDLE: DragState = { product: null, ghostX: 0, ghostY: 0, hoveredZoneId: null, overTray: false }
+const IDLE: DragState = {
+  product: null,
+  ghostX: 0,
+  ghostY: 0,
+  hoveredZoneId: null,
+  overTray: false,
+  landingX: null,
+  landingY: null,
+  overInvalid: false,
+}
 
 const MOVE_THRESHOLD = 6 // px before a press counts as a drag
 const HOLD_THRESHOLD = 120 // ms hold that visually lifts the tile
@@ -98,8 +112,29 @@ export function useDragController(opts: Options) {
         }
         if (!optsRef.current.enabled || !session.began) return
         ev.preventDefault()
-        const { hoveredZoneId, overTray } = resolveHover(ev.clientX, ev.clientY)
-        setState({ product, ghostX: ev.clientX, ghostY: ev.clientY, hoveredZoneId, overTray })
+        const { hoveredZoneId, overTray, localX, localY } = resolveHover(ev.clientX, ev.clientY)
+        let landingX: number | null = null
+        let landingY: number | null = null
+        if (hoveredZoneId !== null) {
+          const t = optsRef.current.getTransform()
+          const zone = optsRef.current.zones.find((z) => z.id === hoveredZoneId)
+          if (zone) {
+            const { pos_x, pos_y } = pointToZonePos(zone, localX, localY, t)
+            const c = placedCenter(zone, pos_x, pos_y, t)
+            landingX = c.x
+            landingY = c.y
+          }
+        }
+        setState({
+          product,
+          ghostX: ev.clientX,
+          ghostY: ev.clientY,
+          hoveredZoneId,
+          overTray,
+          landingX,
+          landingY,
+          overInvalid: hoveredZoneId === null && !overTray,
+        })
       }
 
       const up = (ev: PointerEvent) => {
@@ -141,6 +176,9 @@ export function useDragController(opts: Options) {
             ghostY: session.startY,
             hoveredZoneId: null,
             overTray: false,
+            landingX: null,
+            landingY: null,
+            overInvalid: false,
           })
         }
       }, HOLD_THRESHOLD)

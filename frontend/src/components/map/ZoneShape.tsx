@@ -21,14 +21,14 @@ export function ZoneShape({ zone, rect, count, highlighted }: ZoneShapeProps) {
         width: rect.width,
         height: rect.height,
         borderRadius: isWindow ? 'var(--radius-md)' : 'var(--radius-lg)',
-        background: highlighted ? 'var(--drop-target)' : isWindow ? 'var(--surface-raised)' : 'var(--surface)',
+        background: highlighted ? 'var(--drop-valid-fill)' : isWindow ? 'var(--surface-raised)' : 'var(--surface)',
         boxShadow: highlighted
           ? 'var(--drop-glow)'
           : isWindow
             ? 'inset 0 1px 0 rgba(255,255,255,0.06), var(--elev-1)'
             : 'var(--elev-1)',
         outline: highlighted
-          ? '2px solid var(--drop-target-ring)'
+          ? '2px solid var(--accent)'
           : `1px solid ${isWindow ? 'var(--border-strong)' : 'var(--border)'}`,
         outlineOffset: highlighted ? '-2px' : '-1px',
       }}
@@ -42,7 +42,9 @@ export function ZoneShape({ zone, rect, count, highlighted }: ZoneShapeProps) {
       )}
 
       <div className="absolute left-2 top-2 flex items-center gap-1.5">
-        <span className="eyebrow !text-[10px] text-ink-soft">{zone.name}</span>
+        <span className={`eyebrow !text-[10px] ${highlighted ? 'text-ink' : 'text-ink-soft'}`}>
+          {zone.name}
+        </span>
       </div>
 
       <span
