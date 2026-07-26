@@ -1,6 +1,8 @@
 import { IonIcon } from '@ionic/react'
 import { personCircleOutline, storefront } from 'ionicons/icons'
 import { useAuth } from '../context/AuthContext'
+import { SegmentNav } from './SegmentNav'
+import type { SegmentOption } from './SegmentNav'
 
 export type View = 'map' | 'products'
 
@@ -11,7 +13,7 @@ interface HeaderProps {
   onProfile: () => void
 }
 
-const TABS: { id: View; label: string }[] = [
+const TABS: SegmentOption<View>[] = [
   { id: 'map', label: 'Ladenplan' },
   { id: 'products', label: 'Produkte' },
 ]
@@ -57,23 +59,12 @@ export function Header({ view, onViewChange, onLogin, onProfile }: HeaderProps) 
 
       {/* Segmented view switch */}
       <div className="mx-auto w-full max-w-[1120px] px-4 pb-3">
-        <div className="inline-flex rounded-full bg-inset p-1 ring-1 ring-line">
-          {TABS.map((tab) => {
-            const active = view === tab.id
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => onViewChange(tab.id)}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-                  active ? 'bg-accent text-on-accent' : 'text-ink-soft hover:text-ink'
-                }`}
-              >
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
+        <SegmentNav
+          options={TABS}
+          value={view}
+          onChange={onViewChange}
+          ariaLabel="Ansicht wechseln"
+        />
       </div>
     </header>
   )
