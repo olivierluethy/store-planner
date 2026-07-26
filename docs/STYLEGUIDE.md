@@ -214,3 +214,65 @@ tokens above in `frontend/src/theme/variables.css`:
 - **Don't** add a second font family, a light theme, or a second accent hue.
 - **Don't** style with anything but Tailwind utilities + these CSS variables.
 - **Don't** restyle existing screens when adding a feature — match, don't reinvent.
+
+## 12. Interaction states
+
+Additive to the sections above — no existing colour, type, spacing or radius
+value changes. New tokens live in `frontend/src/theme/tokens.css`.
+
+### 12.1 Focus (keyboard only)
+
+- Focus is shown **only** on `:focus-visible`, never on `:hover`, `:active` or
+  plain `:focus` from a pointer. It is a **ring, never a filled background block**.
+- Ring: `--focus-ring` = `0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-ring)`
+  (a 2px accent ring with a 2px dark offset). Applied via `box-shadow` so it
+  never shifts layout.
+- Every interactive element sets `-webkit-tap-highlight-color: transparent` and
+  `user-select: none`; descriptive/body copy keeps `user-select: text`. A tap
+  must never produce a text-selection highlight.
+
+### 12.2 Segment / tab control
+
+The `Ladenplan` / `Produkte` switch (`SegmentNav`):
+
+| Part | Style |
+|---|---|
+| Container | `--surface-raised` fill, `1px --border`, `--radius-pill`, `4px` inset padding. |
+| Buttons | Two **equal-width** buttons; **same font weight (600) in both states** so the active indicator never causes a width jump. |
+| Sliding indicator | Absolutely positioned pill behind the active label, `--accent` fill; transitions `transform` **and** `width` over **200ms** `cubic-bezier(0.2,0.7,0.2,1)`. |
+| Active label | `--text-on-accent` (sits on the amber indicator). |
+| Inactive label | `--text-secondary`; hover → `--text-primary`. |
+| A11y | `role="tablist"` / `role="tab"`, `aria-selected`, arrow-key navigation. No Ionic ripple, no `--background-focused`, no browser highlight. |
+
+### 12.3 Drag — lifted element (list row & map tile)
+
+On grab the **real element stays in the DOM** — no clone, no re-parent, no class
+swap. Only these change; background, padding, typography, badges and icons stay
+identical to idle:
+
+| Token | Value | Meaning |
+|---|---|---|
+| transform | `scale(1.015)` (row) / `scale(1.06)` (tile) + `translate3d` follow | lift |
+| `--row-grabbed-border` | `rgba(246,168,33,0.55)` | subtle accent-tinted edge on the lifted row |
+| `--drag-shadow` | see §2 | raised elevation |
+| cursor | `grabbing` | — |
+
+### 12.4 Index-based insertion (list reorder)
+
+- Rows between the source and target index shift by **exactly one row stride**,
+  animated **150ms ease-out**, opening a visible gap.
+- **Insertion line:** a `2px` `--accent` bar (`--insertion-line`) rendered at the
+  target index, full row width, slightly rounded.
+- Recomputed from the pointer's Y against cached row rects on every `pointermove`.
+- Handle inert state (sort ≠ manual): handle at **35% opacity**, non-interactive.
+
+### 12.5 Map drop feedback
+
+| State | Style |
+|---|---|
+| **drop-valid** (zone under pointer) | zone gets `2px --accent` border + `--drop-valid-fill` (`rgba(246,168,33,0.10)`) tint + `--drop-glow`; its label brightens to `--text-primary`. |
+| **landing ghost** | a **dashed** `1.5px --accent` outline of the tile (`--radius-md`), rendered at the exact spot the tile will land, following the pointer inside the zone. |
+| **drop-invalid** (over no valid target) | the dragged tile gains a `--drop-invalid-ring` (`--danger`) outline so it reads as "will snap back". |
+
+New tokens: `--focus-ring`, `--row-grabbed-border`, `--insertion-line`,
+`--drop-valid-fill`, `--drop-invalid-ring`.
