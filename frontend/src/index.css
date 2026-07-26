@@ -62,11 +62,34 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Keyboard focus ring (styleguide §7). */
-  :where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  /* Interactive elements never show a tap flash or a text-selection highlight
+     (styleguide §12.1). Descriptive copy stays selectable. */
+  button,
+  a,
+  [role='tab'],
+  [role='button'],
+  .drag-handle,
+  .no-select {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  p,
+  .selectable {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  /* Keyboard focus ring (styleguide §7 + §12.1) — :focus-visible only, always a
+     ring, never a filled background. */
+  :where(button, a, input, textarea, select, [tabindex], [role='tab']):focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-ring);
+    box-shadow: var(--focus-ring);
     border-radius: var(--radius-sm);
+  }
+  /* A pointer press must not leave a lingering focus box. */
+  :where(button, a, [role='tab']):focus:not(:focus-visible) {
+    outline: none;
   }
 
   @media (prefers-reduced-motion: reduce) {

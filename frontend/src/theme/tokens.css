@@ -53,6 +53,13 @@
   --radius-lg: 16px;
   --radius-xl: 22px;
 
+  /* Interaction states (styleguide §12) */
+  --focus-ring: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-ring);
+  --row-grabbed-border: rgba(246, 168, 33, 0.55);
+  --insertion-line: var(--accent);
+  --drop-valid-fill: rgba(246, 168, 33, 0.1);
+  --drop-invalid-ring: var(--danger);
+
   color-scheme: dark;
 }
 
