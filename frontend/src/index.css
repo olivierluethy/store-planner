@@ -1,0 +1,108 @@
+/* Fonts (bundled, offline-safe), Tailwind, and design tokens. */
+@import '@fontsource-variable/sora';
+@import 'tailwindcss';
+@import './theme/tokens.css';
+
+/* Map the design tokens onto Tailwind utilities (bg-*, text-*, border-*, …). */
+@theme {
+  --font-sans: 'Sora Variable', 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-floor: var(--bg-base);
+  --color-layer: var(--bg-layer);
+  --color-surface: var(--surface);
+  --color-raised: var(--surface-raised);
+  --color-inset: var(--surface-inset);
+
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+
+  --color-ink: var(--text-primary);
+  --color-ink-soft: var(--text-secondary);
+  --color-ink-mute: var(--text-muted);
+  --color-on-accent: var(--text-on-accent);
+
+  --color-accent: var(--accent);
+  --color-accent-hi: var(--accent-hover);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-danger-hi: var(--danger-hover);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --shadow-e1: var(--elev-1);
+  --shadow-e2: var(--elev-2);
+  --shadow-e3: var(--elev-3);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior: none;
+  }
+
+  /* Tabular figures for the numeric data called out in the styleguide. */
+  .tnum {
+    font-feature-settings: 'tnum' 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Keyboard focus ring (styleguide §7). */
+  :where(button, a, input, textarea, select, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-ring);
+    border-radius: var(--radius-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Eyebrow / overline label. */
+  .eyebrow {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+}
+
+/* Ionic content surfaces should read as our floor, not Ionic's default. */
+ion-content {
+  --background: var(--bg-base);
+}
+ion-modal {
+  --background: transparent;
+  --box-shadow: none;
+  --width: 100%;
+  --height: 100%;
+}
+ion-toast {
+  --background: var(--surface-raised);
+  --color: var(--text-primary);
+  --border-radius: var(--radius-md);
+}
