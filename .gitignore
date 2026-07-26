@@ -1,0 +1,30 @@
+# --- Backend ---
+backend/config.php
+
+# --- Node / Frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+*.local
+
+# --- Capacitor / native ---
+frontend/android/
+frontend/ios/
+.gradle/
+DerivedData/
+Pods/
+
+# --- Env ---
+.env
+.env.*
+!.env.example
+
+# --- Editor / OS ---
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+Thumbs.db
